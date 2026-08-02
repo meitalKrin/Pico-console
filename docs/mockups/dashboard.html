@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — PICO-CADE game-select shell (128×160 ST7735)</title>
+<link rel="stylesheet" href="device.css">
+</head>
+<body>
+<div class="stage">
+  <p class="screen-title">Console shell · game select</p>
+
+  <div class="device">
+    <div class="brand-row">
+      <span class="brand">PICO-CADE <span class="sub">· RP2350</span></span>
+      <span class="power-led"></span>
+    </div>
+    <div class="bezel">
+      <canvas class="screen" id="screen" width="128" height="160"></canvas>
+    </div>
+    <div class="screen-meta">128 × 160 · ST7735 · RGB565</div>
+    <div class="controls">
+      <div class="stick" title="Analog joystick — move selection"></div>
+      <div class="btns">
+        <div class="btn accent" title="C — launch selected game">C</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legend">
+    The <b>game-select shell</b> is the always-planned integrating feature: it
+    owns the hardware, runs the shared input/render/timing services, and
+    launches the chosen <b>cartridge</b> — then takes control back on exit. The
+    three standalone firmwares become modules behind one menu.
+  </p>
+  <p class="note">Design concept for the console shell, rendered at the real panel resolution.</p>
+  <p class="backlink"><a href="index.html">← all screens</a> · <a href="../presentations/console.html">presentation ›</a></p>
+</div>
+
+<script src="device.js"></script>
+<script>
+  var ctx = PICO.ctxOf('screen');
+  var C = PICO.COL;
+
+  var BG = 0x10A2;      // deep slate background
+  var PANEL = 0x18E3;   // menu row panel
+  var SEL = 0x05CC;     // accent teal (selection)
+  var SELDK = 0x023A;   // dark teal fill
+
+  PICO.fill565(ctx, 0, 0, 128, 160, BG);
+
+  // header
+  PICO.fill565(ctx, 0, 0, 128, 22, 0x0841);
+  PICO.text(ctx, 'PICO-CADE', 30, 4, SEL, 1);
+  PICO.text(ctx, 'SELECT GAME', 28, 14, 0x9CD3, 1);
+
+  // ---- mini 16x16 icon sprites ----
+  function iconBox(x, y, bg) { PICO.fill565(ctx, x, y, 16, 16, bg); }
+
+  function iconSpace(x, y) {
+    iconBox(x, y, C.SHIP_BG);
+    PICO.fill565(ctx, x + 6, y + 10, 4, 4, C.SHIP_PLAYER); // player
+    PICO.fill565(ctx, x + 3, y + 3, 2, 2, C.WHITE);
+    PICO.fill565(ctx, x + 11, y + 5, 2, 2, C.WHITE);
+    PICO.fill565(ctx, x + 8, y + 6, 2, 2, C.WHITE);
+  }
+  function iconPaint(x, y) {
+    iconBox(x, y, C.WHITE);
+    PICO.fill565(ctx, x + 2, y + 2, 5, 5, C.RED);
+    PICO.fill565(ctx, x + 9, y + 3, 5, 5, C.BLUE);
+    PICO.fill565(ctx, x + 4, y + 9, 5, 5, C.GREEN);
+    PICO.fill565(ctx, x + 10, y + 9, 4, 4, C.MAGENTA);
+  }
+  function iconSnake(x, y) {
+    iconBox(x, y, C.BLACK);
+    PICO.fill565(ctx, x + 2, y + 8, 4, 4, C.GREEN);
+    PICO.fill565(ctx, x + 6, y + 8, 4, 4, C.GREEN);
+    PICO.fill565(ctx, x + 6, y + 4, 4, 4, C.GREEN);
+    PICO.fill565(ctx, x + 10, y + 4, 4, 4, 0x9FF3);
+    PICO.fill565(ctx, x + 3, y + 3, 3, 3, C.RED); // food
+  }
+
+  // ---- menu rows ----
+  var rows = [
+    { y: 32, name: 'SPACESHIP', sub: 'DODGE', icon: iconSpace, sel: true },
+    { y: 72, name: 'PAINT',     sub: 'DRAW',  icon: iconPaint, sel: false },
+    { y: 112, name: 'SNAKE',    sub: 'GROW',  icon: iconSnake, sel: false }
+  ];
+
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (r.sel) {
+      PICO.fill565(ctx, 4, r.y - 2, 120, 30, SELDK);
+      PICO.fill565(ctx, 4, r.y - 2, 3, 30, SEL);   // accent edge
+    } else {
+      PICO.fill565(ctx, 4, r.y - 2, 120, 30, PANEL);
+    }
+    r.icon(12, r.y + 5);
+    PICO.text(ctx, r.name, 36, r.y + 4, r.sel ? C.WHITE : 0xBDF7, 1);
+    PICO.text(ctx, r.sub, 36, r.y + 14, r.sel ? SEL : 0x6B4D, 1);
+    if (r.sel) PICO.text(ctx, '>', 112, r.y + 9, SEL, 1);
+  }
+
+  // footer hint
+  PICO.fill565(ctx, 0, 150, 128, 10, 0x0841);
+  PICO.text(ctx, 'JOYSTICK-SELECT  C-PLAY', 6, 152, 0x9CD3, 1);
+</script>
+</body>
+</html>

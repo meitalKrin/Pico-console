@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaceship — PICO-CADE mockup (128×160 ST7735)</title>
+<link rel="stylesheet" href="device.css">
+</head>
+<body>
+<div class="stage">
+  <p class="screen-title">Spaceship · dodge the falling stars</p>
+
+  <div class="device">
+    <div class="brand-row">
+      <span class="brand">PICO-CADE <span class="sub">· RP2350</span></span>
+      <span class="power-led"></span>
+    </div>
+    <div class="bezel">
+      <canvas class="screen" id="screen" width="128" height="160"></canvas>
+    </div>
+    <div class="screen-meta">128 × 160 · ST7735 · RGB565</div>
+    <div class="controls">
+      <div class="stick" title="Analog joystick — PA1 / PB1"></div>
+      <div class="btns">
+        <div class="btn accent" title="PA10 — start">C</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legend">
+    Player block (<b>amber 0xFF00</b>) dodges <b>white 5×5 stars</b> falling on a
+    <b>navy 0x0010</b> field. HUD shows the live score — note the MVP counts
+    <b>survival ticks</b>, not dodges (a planned <i>score = dodges</i> story).
+  </p>
+  <p class="note">Static design mockup rendered at the real panel resolution; colours are the exact RGB565 constants from the firmware.</p>
+  <p class="backlink"><a href="index.html">← all screens</a> · <a href="../presentations/spaceship.html">presentation ›</a></p>
+</div>
+
+<script src="device.js"></script>
+<script>
+  var ctx = PICO.ctxOf('screen');
+  var C = PICO.COL;
+
+  // background field
+  PICO.fill565(ctx, 0, 0, 128, 160, C.SHIP_BG);
+
+  // falling stars (white 5x5), scattered down the field
+  var stars = [[20,22],[54,44],[92,30],[38,74],[108,60],[70,98],[16,118],[100,108],[60,140]];
+  for (var i = 0; i < stars.length; i++) {
+    PICO.fill565(ctx, stars[i][0], stars[i][1], 5, 5, C.WHITE);
+  }
+
+  // player block (amber 5x5) near bottom-centre
+  PICO.fill565(ctx, 62, 130, 5, 5, C.SHIP_PLAYER);
+
+  // HUD
+  PICO.text(ctx, 'SCORE', 4, 5, C.WHITE, 1);
+  PICO.text(ctx, '0042', 4, 13, C.SHIP_PLAYER, 1);
+</script>
+</body>
+</html>

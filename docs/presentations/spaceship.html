@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaceship — PICO-CADE presentation</title>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav">
+    <a href="index.html">‹ All decks</a>
+    <a href="console.html">Console</a>
+    <a href="paint.html">Paint</a>
+    <a href="snake.html">Snake</a>
+    <span class="spacer"></span>
+    <a href="../mockups/spaceship.html">Live mockup ›</a>
+  </nav>
+
+  <header class="hero">
+    <span class="tag" style="color:var(--space)">Game · shipping today</span>
+    <h1>Spaceship</h1>
+    <p class="lead">A vertical “dodge the falling stars” arcade game on the STM32F411 — move an
+    amber block in X and Y to weave through obstacles while the pace ramps up.</p>
+    <div class="accent-bar" style="background:linear-gradient(90deg,var(--space),var(--accent))"></div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>What it is</h2>
+      <p>A single-screen reflex game with three states — <b>attract → playing → game-over</b> —
+      driven entirely from one bare-metal main loop. Obstacles are spawned as nodes in a
+      <b>singly-linked list</b>, fall each frame, and recycle to the top; an <b>AABB hit test</b>
+      against the player ends the run.</p>
+      <h3>How it works</h3>
+      <ul>
+        <li>Analog joystick on the ADC steers the 5×5 player block.</li>
+        <li>Stars spawn ~1 in 10 ticks and accelerate as a difficulty timer winds down.</li>
+        <li>Everything is drawn straight over SPI to a hand-written ST7735 driver.</li>
+      </ul>
+    </div>
+    <div class="preview">
+      <a href="../mockups/spaceship.html"><img src="../mockups/spaceship-thumb.png" alt="Spaceship screen mockup" style="width:240px;max-width:100%;border-radius:10px"></a>
+      <div class="cap">128×160 ST7735 · exact RGB565 colours · <a href="../mockups/spaceship.html">open live ›</a></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h2>Skills demonstrated</h2>
+    <div class="chips">
+      <span class="chip">Bare-metal ST7735 driver (datasheet command sequences)</span>
+      <span class="chip">SPI master @8&nbsp;MHz, mode&nbsp;0, MSB-first</span>
+      <span class="chip">Software CS/DC bit-bang protocol</span>
+      <span class="chip">RGB565 framebuffer colour</span>
+      <span class="chip">Finite state machine</span>
+      <span class="chip">Dynamic linked-list obstacles (malloc/free)</span>
+      <span class="chip">12-bit ADC dual-channel scan sampling</span>
+      <span class="chip">8-sample averaging + deadzone + hand calibration</span>
+      <span class="chip">AABB collision detection</span>
+      <span class="chip">HAL_GetTick timing &amp; difficulty ramp</span>
+      <span class="chip">Retargeted printf-over-UART debug</span>
+    </div>
+  </div>
+
+  <div class="road" style="margin-top:22px">
+    <div class="col now">
+      <h4>Shipping today — MVP</h4>
+      <ul>
+        <li>Playable dodge loop with attract / play / game-over states</li>
+        <li>Dynamic obstacle field via linked list</li>
+        <li>Analog joystick control with filtering</li>
+        <li>Live on-screen score &amp; restart</li>
+      </ul>
+    </div>
+    <div class="col next">
+      <h4>Where it’s headed — Full release</h4>
+      <ul>
+        <li><b>Score = dodges</b> (today it counts survival ticks)</li>
+        <li>Bounded difficulty curve (no run-away pacing)</li>
+        <li>Obstacle lifecycle — recycle nodes, zero heap growth</li>
+        <li>Seeded RNG for a fresh field each power-up</li>
+        <li>DMA + framebuffer render (kill the flicker)</li>
+        <li>Exit-to-shell as a console cartridge</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="poc">
+    <h2>Proof-of-concept framing</h2>
+    <p>The headline gap — the score counts <i>frames survived</i>, not dodges — is the clearest
+    “next story.” It is a deliberate MVP shortcut: the loop, rendering, and input are proven, and
+    swapping a survival counter for a dodge counter is a small, well-scoped change that was always
+    planned. Same story for the unbounded obstacle list and the unseeded RNG.</p>
+  </div>
+
+  <div class="foot">
+    Full detail in the <b>spaceShipGame</b> repo: <code>docs/PRD.md</code> ·
+    <code>docs/ARCHITECTURE.md</code> · <code>docs/STRENGTHS-AND-WEAKNESSES.md</code> ·
+    <code>docs/IMPROVEMENTS-AND-BUGS.md</code>. Console view:
+    <a href="console.html">the console deck ›</a>
+  </div>
+</div>
+</body>
+</html>

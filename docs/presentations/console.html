@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Console — PICO-CADE presentation</title>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav">
+    <a href="index.html">‹ All decks</a>
+    <a href="spaceship.html">Spaceship</a>
+    <a href="paint.html">Paint</a>
+    <a href="snake.html">Snake</a>
+    <span class="spacer"></span>
+    <a href="../mockups/dashboard.html">Live mockup ›</a>
+  </nav>
+
+  <header class="hero">
+    <span class="tag">System · the big picture</span>
+    <h1>From three firmwares to one console</h1>
+    <p class="lead">Today the games are standalone STM32 firmware images — each owns the CPU, the
+    display driver, everything. The console turns them into <b>cartridges</b> behind a shell, on a
+    shared hardware abstraction layer, ready to port to the Raspberry Pi Pico 2 (RP2350).</p>
+    <div class="accent-bar"></div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>The idea</h2>
+      <p>A <b>game-select shell</b> owns the hardware and the shared services, then launches the
+      chosen game through a small lifecycle contract and takes control back when it exits:</p>
+      <ul>
+        <li><code>init(ctx)</code> — game grabs shared services, sets up state</li>
+        <li><code>update(input, dt)</code> — one tick of game logic</li>
+        <li><code>render(fb)</code> — draw into the shared framebuffer</li>
+        <li><code>teardown()</code> — release, return to the shell</li>
+      </ul>
+      <p class="muted">Each game stops owning <code>main()</code> and its own copy of the driver,
+      and becomes a module the shell can list, launch, and reclaim.</p>
+    </div>
+    <div class="preview">
+      <a href="../mockups/dashboard.html"><img src="../mockups/dashboard-thumb.png" alt="Console shell mockup" style="width:240px;max-width:100%;border-radius:10px"></a>
+      <div class="cap">The game-select shell · <a href="../mockups/dashboard.html">open live ›</a></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h2>Skills demonstrated</h2>
+    <div class="chips">
+      <span class="chip">Hardware abstraction layer (HAL) design</span>
+      <span class="chip">Cartridge lifecycle contract + shell/runtime</span>
+      <span class="chip">Shared input service (ADC joystick + debounced buttons)</span>
+      <span class="chip">Shared display service (DMA + framebuffer / dirty-rect)</span>
+      <span class="chip">Timing / scheduler &amp; seeded RNG services</span>
+      <span class="chip">Flash persistence service</span>
+      <span class="chip">Reconciling divergent copy-pasted drivers (endianness)</span>
+      <span class="chip">Performance engineering: PLL 16→100&nbsp;MHz, DMA SPI</span>
+      <span class="chip">STM32 → RP2350 port behind one abstraction (PIO, dual M33, 520&nbsp;KB)</span>
+    </div>
+  </div>
+
+  <div class="road" style="margin-top:22px">
+    <div class="col now">
+      <h4>Today — proof-of-concept cartridges</h4>
+      <ul>
+        <li>Two playable games (Spaceship, Paint) on STM32F411 @ 16&nbsp;MHz</li>
+        <li>Each is a self-contained firmware image…</li>
+        <li>…with its own copy-pasted ST7735 / ADC / GPIO driver</li>
+        <li>No shell, and no way to exit a game yet</li>
+      </ul>
+    </div>
+    <div class="col next">
+      <h4>Where it’s headed — the console</h4>
+      <ul>
+        <li>Game-select shell + the cartridge lifecycle contract</li>
+        <li>One shared HAL / driver (one endianness, one code path)</li>
+        <li>DMA + framebuffer display service; seeded RNG; flash saves</li>
+        <li>Snake as the reference cartridge</li>
+        <li>Port to RP2350 — PLL/DMA done, PIO offloads the panel, RAM is a non-issue</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="poc">
+    <h2>Proof-of-concept framing</h2>
+    <p>The missing shell and shared HAL are not oversights — they are the <b>integrating features
+    the console exists to add</b>. Building each game standalone first de-risked the hard parts
+    (driver, input, timing) independently; folding them into one runtime is the deliberate next phase,
+    and the gaps between them map the build order exactly.</p>
+  </div>
+
+  <div class="foot">
+    Deeper: <a href="../CONSOLE-PRD.md">Console PRD</a> ·
+    <a href="../CONSOLE-ARCHITECTURE.md">Console Architecture</a> ·
+    <a href="../INTERVIEW-BRIEF.md">Interview Brief</a> ·
+    <a href="../CROSS-CUTTING-IMPROVEMENTS-AND-BUGS.md">Cross-cutting bugs</a>.
+  </div>
+</div>
+</body>
+</html>

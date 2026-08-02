@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PICO-CADE — interview presentations</title>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav">
+    <a href="../../README.md">README</a>
+    <a href="../mockups/index.html">Screen mockups</a>
+    <span class="spacer"></span>
+    <span class="muted">Portfolio decks · embedded firmware</span>
+  </nav>
+
+  <header class="hero">
+    <span class="tag">PICO-CADE · portfolio</span>
+    <h1>A 3-game handheld console, from bare metal up</h1>
+    <p class="lead">Two STM32 games shipping today — a joystick dodge game and an MS-Paint clone —
+    plus a planned game-select shell and Snake, becoming one console on a Raspberry Pi Pico 2 (RP2350).
+    Each deck below explains the idea in ~30 seconds and names the embedded skills behind it.</p>
+    <div class="accent-bar"></div>
+  </header>
+
+  <div class="gallery">
+    <a class="gcard" href="console.html">
+      <span class="dot" style="background:var(--console)"></span><span class="muted">System</span>
+      <h3>The Console</h3>
+      <p>Shell, cartridge contract, shared HAL, and the STM32 → RP2350 port. The systems-thinking story.</p>
+      <span class="arrow">view deck ›</span>
+    </a>
+    <a class="gcard" href="spaceship.html">
+      <span class="dot" style="background:var(--space)"></span><span class="muted">Game · shipping</span>
+      <h3>Spaceship</h3>
+      <p>State machine, dynamic linked-list obstacles, analog ADC control, hand-written display driver.</p>
+      <span class="arrow">view deck ›</span>
+    </a>
+    <a class="gcard" href="paint.html">
+      <span class="dot" style="background:var(--paint)"></span><span class="muted">Game · shipping</span>
+      <h3>Paint</h3>
+      <p>Full-screen 40 KB framebuffer, 6-colour palette, dirty-area redraw, button state machine.</p>
+      <span class="arrow">view deck ›</span>
+    </a>
+    <a class="gcard" href="snake.html">
+      <span class="dot" style="background:var(--snake)"></span><span class="muted">Game · planned</span>
+      <h3>Snake</h3>
+      <p>The reference cartridge: a proper body lifecycle that fixes the heap bug by design.</p>
+      <span class="arrow">view deck ›</span>
+    </a>
+  </div>
+
+  <div class="poc">
+    <h2>How to read these</h2>
+    <p>The two existing games are deliberate <b>MVP proofs-of-concept</b>. Where a core-loop gap
+    shows (no game-exit yet, score counts survival ticks, copy-pasted drivers), it is framed as the
+    next planned story — the gaps trace the roadmap from “three separate firmwares” to “one console.”</p>
+  </div>
+
+  <div class="foot">
+    Deeper docs: <a href="../CONSOLE-PRD.md">Console PRD</a> ·
+    <a href="../CONSOLE-ARCHITECTURE.md">Console Architecture</a> ·
+    <a href="../INTERVIEW-BRIEF.md">Interview Brief</a> ·
+    <a href="../CROSS-CUTTING-IMPROVEMENTS-AND-BUGS.md">Cross-cutting bugs</a>.
+    Per-game PRD / Architecture / Strengths / Bugs live in the spaceShipGame and EmbeddedPaint repos.
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paint — PICO-CADE presentation</title>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav">
+    <a href="index.html">‹ All decks</a>
+    <a href="console.html">Console</a>
+    <a href="spaceship.html">Spaceship</a>
+    <a href="snake.html">Snake</a>
+    <span class="spacer"></span>
+    <a href="../mockups/paint.html">Live mockup ›</a>
+  </nav>
+
+  <header class="hero">
+    <span class="tag" style="color:var(--paint)">Game · shipping today</span>
+    <h1>Paint</h1>
+    <p class="lead">An MS-Paint-style freehand drawing app on the STM32F411 — move a cursor with the
+    joystick, hold to paint in any of six colours, onto a canvas that persists in a full-screen
+    framebuffer.</p>
+    <div class="accent-bar" style="background:linear-gradient(90deg,var(--paint),var(--accent))"></div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>What it is</h2>
+      <p>A persistent drawing surface backed by a <b>128×160×16-bit framebuffer (40&nbsp;KB)</b>.
+      Painting writes colour into the buffer; the display is kept in sync by repainting the small
+      area the cursor just vacated — a hand-rolled <b>dirty-area redraw</b> on a chip with no GPU.</p>
+      <h3>How it works</h3>
+      <ul>
+        <li>Joystick moves a 10×10 cursor (with a movement threshold to settle jitter).</li>
+        <li><b>Hold to paint</b>, release to hover; one button cycles the palette, one clears.</li>
+        <li>A live swatch shows the active colour; the cursor composites over the saved canvas.</li>
+      </ul>
+    </div>
+    <div class="preview">
+      <a href="../mockups/paint.html"><img src="../mockups/paint-thumb.png" alt="Paint screen mockup" style="width:240px;max-width:100%;border-radius:10px"></a>
+      <div class="cap">128×160 ST7735 · exact RGB565 palette · <a href="../mockups/paint.html">open live ›</a></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h2>Skills demonstrated</h2>
+    <div class="chips">
+      <span class="chip alt">Hand-written ST7735 driver</span>
+      <span class="chip alt">Full-screen 40&nbsp;KB framebuffer (persistent canvas)</span>
+      <span class="chip alt">Dirty-area restore / redraw</span>
+      <span class="chip alt">6-colour RGB565 palette + cycling</span>
+      <span class="chip alt">Button state machine (paint / hover / clear / cycle)</span>
+      <span class="chip alt">Debounced input via timed delays</span>
+      <span class="chip alt">Cursor compositing over a saved buffer</span>
+      <span class="chip alt">UI region masking (swatch quarantine)</span>
+      <span class="chip alt">12-bit ADC joystick sampling + deadzone</span>
+    </div>
+  </div>
+
+  <div class="road" style="margin-top:22px">
+    <div class="col now">
+      <h4>Shipping today — MVP</h4>
+      <ul>
+        <li>Freehand painting with hold-to-draw / hover</li>
+        <li>Persistent canvas in a 40 KB framebuffer</li>
+        <li>Six-colour palette with one-button cycling</li>
+        <li>Full-screen clear / reset</li>
+      </ul>
+    </div>
+    <div class="col next">
+      <h4>Where it’s headed — Full release</h4>
+      <ul>
+        <li>Undo / redo (cheap once RAM isn’t the limit)</li>
+        <li>Save / load drawings to flash</li>
+        <li>Flood-fill, adjustable brush size, true white eraser</li>
+        <li>Larger palette / colour picker</li>
+        <li>DMA blit so fast strokes never outrun the redraw</li>
+        <li>Exit-to-shell as a console cartridge</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="poc">
+    <h2>Proof-of-concept framing</h2>
+    <p>The indirect render — painted pixels reach the panel only when the cursor moves off them —
+    is a deliberate MVP simplification that proves the framebuffer-persistence model on a constrained
+    MCU. On the RP2350’s 520 KB RAM, multiple buffers (undo, double-buffering) become trivial, so the
+    “missing” features are roadmap, not rework.</p>
+  </div>
+
+  <div class="foot">
+    Full detail in the <b>EmbeddedPaint</b> repo: <code>docs/PRD.md</code> ·
+    <code>docs/ARCHITECTURE.md</code> · <code>docs/STRENGTHS-AND-WEAKNESSES.md</code> ·
+    <code>docs/IMPROVEMENTS-AND-BUGS.md</code>. Console view:
+    <a href="console.html">the console deck ›</a>
+  </div>
+</div>
+</body>
+</html>

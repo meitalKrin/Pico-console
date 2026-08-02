@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snake — PICO-CADE presentation</title>
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav">
+    <a href="index.html">‹ All decks</a>
+    <a href="console.html">Console</a>
+    <a href="spaceship.html">Spaceship</a>
+    <a href="paint.html">Paint</a>
+    <span class="spacer"></span>
+    <a href="../mockups/snake.html">Live mockup ›</a>
+  </nav>
+
+  <header class="hero">
+    <span class="tag" style="color:var(--snake)">Game · planned · reference cartridge</span>
+    <h1>Snake</h1>
+    <p class="lead">The third game — built greenfield, natively to the console’s game-module
+    contract, so it doubles as the reference implementation that proves the cartridge model.</p>
+    <div class="accent-bar" style="background:linear-gradient(90deg,var(--snake),var(--accent))"></div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>What it is</h2>
+      <p>Classic grid Snake: steer a growing body around an 8&nbsp;px cell grid, eat food to grow,
+      avoid the walls and yourself, ramp up speed as you lengthen. It is deliberately the
+      <b>first game written to the contract</b> — <code>init / update / render / teardown</code> —
+      rather than owning its own <code>main()</code>.</p>
+      <h3>Why it leads the refactor</h3>
+      <ul>
+        <li>Its body is a <b>proper linked list / ring buffer</b> with correct node lifecycle…</li>
+        <li>…which <b>fixes spaceShip’s unbounded-heap bug by design</b>, as a worked example.</li>
+        <li>Food spawns from the <b>shared seeded RNG</b> — fair and reproducible.</li>
+      </ul>
+    </div>
+    <div class="preview">
+      <a href="../mockups/snake.html"><img src="../mockups/snake-thumb.png" alt="Snake screen mockup" style="width:240px;max-width:100%;border-radius:10px"></a>
+      <div class="cap">128×160 ST7735 · design concept · <a href="../mockups/snake.html">open live ›</a></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h2>Skills it will demonstrate</h2>
+    <div class="chips">
+      <span class="chip">Game-module / cartridge lifecycle contract</span>
+      <span class="chip">Linked-list / ring-buffer body with correct lifecycle</span>
+      <span class="chip">Shared seeded RNG service</span>
+      <span class="chip">Grid model + dirty-cell rendering</span>
+      <span class="chip">Self / wall collision</span>
+      <span class="chip">Speed ramp via shared scheduler</span>
+      <span class="chip">Flash high-score persistence</span>
+      <span class="chip">Built on the shared input / display HAL</span>
+    </div>
+  </div>
+
+  <div class="road" style="margin-top:22px">
+    <div class="col now">
+      <h4>MVP target</h4>
+      <ul>
+        <li>Grid movement, growth, food, self/wall collision</li>
+        <li>Score + speed ramp</li>
+        <li>High score saved to flash</li>
+        <li>Runs as a cartridge under the shell</li>
+      </ul>
+    </div>
+    <div class="col next">
+      <h4>Where it’s headed — Full release</h4>
+      <ul>
+        <li>Levels / maze obstacles</li>
+        <li>Wrap-around mode</li>
+        <li>Two-player / versus</li>
+        <li>Cosmetic skins &amp; themes</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="poc">
+    <h2>Proof-of-concept framing</h2>
+    <p>Snake is the deliberate “do it right” cartridge: it takes the linked-list pattern Spaceship
+    introduced and gives it the disciplined lifecycle the MVP skipped. Shipping Snake on the contract
+    is what turns “three separate firmwares” into “a console with a reusable game template.”</p>
+  </div>
+
+  <div class="foot">
+    Design docs in this repo: <a href="../SNAKE-PRD.md">SNAKE-PRD.md</a> ·
+    <a href="../SNAKE-ARCHITECTURE.md">SNAKE-ARCHITECTURE.md</a>. Console view:
+    <a href="console.html">the console deck ›</a>
+  </div>
+</div>
+</body>
+</html>

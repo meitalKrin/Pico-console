@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snake — PICO-CADE mockup (128×160 ST7735)</title>
+<link rel="stylesheet" href="device.css">
+</head>
+<body>
+<div class="stage">
+  <p class="screen-title">Snake · the reference cartridge (planned)</p>
+
+  <div class="device">
+    <div class="brand-row">
+      <span class="brand">PICO-CADE <span class="sub">· RP2350</span></span>
+      <span class="power-led"></span>
+    </div>
+    <div class="bezel">
+      <canvas class="screen" id="screen" width="128" height="160"></canvas>
+    </div>
+    <div class="screen-meta">128 × 160 · ST7735 · RGB565</div>
+    <div class="controls">
+      <div class="stick" title="Analog joystick — 4-direction steering"></div>
+      <div class="btns">
+        <div class="btn accent" title="Start / pause">C</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legend">
+    Grid-based Snake on an 8 px cell grid. The body is a <b>proper linked
+    list / ring buffer</b> with correct node lifecycle — so Snake fixes
+    spaceShip's unbounded-heap bug <i>by design</i> and is the <b>reference
+    cartridge</b> built natively to the console's game-module contract.
+    Food spawns from the shared <b>seeded RNG</b>.
+  </p>
+  <p class="note">Greenfield design concept (no firmware yet) rendered at the real panel resolution to match the device.</p>
+  <p class="backlink"><a href="index.html">← all screens</a> · <a href="../presentations/snake.html">presentation ›</a></p>
+</div>
+
+<script src="device.js"></script>
+<script>
+  var ctx = PICO.ctxOf('screen');
+  var C = PICO.COL;
+  var C_DKGRID = 0x0841;  // very dark grid line
+  var C_SNAKE = C.GREEN;
+  var C_HEAD = 0x9FF3;    // light green head
+  var C_FOOD = C.RED;
+  var CELL = 8;
+
+  // dark field
+  PICO.fill565(ctx, 0, 0, 128, 160, C.BLACK);
+
+  // faint grid (play area below the HUD strip)
+  var top = 24;
+  for (var x = 0; x <= 128; x += CELL) PICO.fill565(ctx, x, top, 1, 160 - top, C_DKGRID);
+  for (var y = top; y <= 160; y += CELL) PICO.fill565(ctx, 0, y, 128, 1, C_DKGRID);
+
+  function cell(cx, cy, color) {
+    PICO.fill565(ctx, cx * CELL + 1, cy * CELL + 1, CELL - 1, CELL - 1, color);
+  }
+
+  // snake body (cells), head last/brightest — an L shape
+  var body = [[4,12],[5,12],[6,12],[7,12],[8,12],[8,11],[8,10],[8,9],[9,9]];
+  for (var i = 0; i < body.length - 1; i++) cell(body[i][0], body[i][1], C_SNAKE);
+  var h = body[body.length - 1];
+  cell(h[0], h[1], C_HEAD);
+
+  // food
+  cell(13, 6, C_FOOD);
+
+  // HUD
+  PICO.text(ctx, 'SCORE', 4, 6, C.WHITE, 1);
+  PICO.text(ctx, '08', 44, 6, C.GREEN, 1);
+  PICO.text(ctx, 'HI', 96, 6, C.WHITE, 1);
+  PICO.text(ctx, '21', 110, 6, C.YELLOW, 1);
+</script>
+</body>
+</html>

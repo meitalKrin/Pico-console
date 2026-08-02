@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PICO-CADE — screen mockups</title>
+<link rel="stylesheet" href="../presentations/deck.css">
+<style>
+  .shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 26px; }
+  @media (max-width: 760px) { .shots { grid-template-columns: 1fr; } }
+  .shot {
+    display: block; text-decoration: none; color: var(--text);
+    background: var(--card); border: 1px solid var(--edge);
+    border-radius: 16px; padding: 18px; text-align: center;
+    transition: border-color .15s, transform .15s;
+  }
+  .shot:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .shot img { width: 220px; max-width: 100%; height: auto; border-radius: 10px; }
+  .shot h3 { margin: 14px 0 4px; font-size: 18px; }
+  .shot p { margin: 0; color: var(--muted); font-size: 13px; }
+  .shot .arrow { color: var(--accent); font-size: 13px; margin-top: 10px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav">
+    <a href="../../README.md">README</a>
+    <a href="../presentations/index.html">Presentations</a>
+    <span class="spacer"></span>
+    <span class="muted">Screen mockups · 128×160 ST7735 · RGB565</span>
+  </nav>
+
+  <header class="hero">
+    <span class="tag">PICO-CADE · device mockups</span>
+    <h1>Every screen, at panel resolution</h1>
+    <p class="lead">Self-contained mockups of the console shell and all three games, drawn on a
+    true 128×160 ST7735 canvas with the exact RGB565 colours from the firmware — so what you
+    see is what the real display shows.</p>
+    <div class="accent-bar"></div>
+  </header>
+
+  <div class="shots">
+    <a class="shot" href="dashboard.html">
+      <img src="dashboard-thumb.png" alt="Console shell game-select screen">
+      <h3>Console shell</h3>
+      <p>Game-select dashboard — the always-planned integrating feature.</p>
+      <span class="arrow">open mockup ›</span>
+    </a>
+    <a class="shot" href="spaceship.html">
+      <img src="spaceship-thumb.png" alt="Spaceship dodge game screen">
+      <h3>Spaceship</h3>
+      <p>Dodge the falling stars. Amber player, white obstacles, navy field.</p>
+      <span class="arrow">open mockup ›</span>
+    </a>
+    <a class="shot" href="paint.html">
+      <img src="paint-thumb.png" alt="Paint freehand drawing screen">
+      <h3>Paint</h3>
+      <p>Freehand drawing into a 40 KB framebuffer with a 6-colour palette.</p>
+      <span class="arrow">open mockup ›</span>
+    </a>
+    <a class="shot" href="snake.html">
+      <img src="snake-thumb.png" alt="Snake game screen">
+      <h3>Snake <span class="muted" style="font-size:13px">(planned)</span></h3>
+      <p>The reference cartridge — grid game built to the game-module contract.</p>
+      <span class="arrow">open mockup ›</span>
+    </a>
+  </div>
+
+  <div class="foot">
+    These are <b>design mockups</b>, not screen captures from hardware: the two existing games
+    (Spaceship, Paint) ship today as standalone STM32F411 firmware; the shell and Snake are the
+    planned console additions. See the <a href="../presentations/index.html">presentations</a> for
+    the idea, the skills behind each game, and the roadmap.
+  </div>
+</div>
+</body>
+</html>
