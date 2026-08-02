@@ -12,6 +12,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
+
 set(PICO_BOARD pico2_w CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.13)
@@ -20,7 +21,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Pull in the Pico SDK (local file, not the env-var version)
+# Pull in the Pico SDK
 include(pico_sdk_import.cmake)
 
 project(pico_console C CXX ASM)
@@ -34,7 +35,7 @@ add_executable(pico_console
     snake.c
     spaceship.c
     paint.c
-    )
+)
 
 # Enable USB serial output (printf), disable UART serial
 pico_enable_stdio_usb(pico_console 1)

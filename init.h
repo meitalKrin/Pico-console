@@ -51,4 +51,5 @@ void init(void);
 void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t scale);
 void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t scale);
 
+
 #endif 

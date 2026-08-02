@@ -4,33 +4,34 @@
 #include "hardware/gpio.h"
 #include "init.h"
 #include "font.h"
-//init 
-//  PRIVATE HELPERS (static)  
-static inline void cs_select(void)   { gpio_put(LCD_PIN_CS, 0); } //low active
-static inline void cs_Deselect(void) { gpio_put(LCD_PIN_CS, 1); } //high non active
+
+// PRIVATE HELPERS (static)
+static inline void cs_select(void)   { gpio_put(LCD_PIN_CS, 0); } // Active Low
+static inline void cs_Deselect(void) { gpio_put(LCD_PIN_CS, 1); } // Inactive High
 
 static inline void lcd_write_cmd(uint8_t cmd) {
     gpio_put(LCD_PIN_DC, 0);
     cs_select();
-    spi_write_blocking(LCD_SPI_PORT,&cmd, 1);
+    spi_write_blocking(LCD_SPI_PORT, &cmd, 1);
     cs_Deselect();
 }
 
 static inline void lcd_write_data(const uint8_t *data, size_t len) {
     gpio_put(LCD_PIN_DC, 1);
     cs_select();
-    spi_write_blocking(LCD_SPI_PORT,data, len);
+    spi_write_blocking(LCD_SPI_PORT, data, len);
     cs_Deselect();
 }
-// reset high -> low -> high 
-static void lcd_reset(void){
+
+// Reset sequence: High -> Low -> High
+static void lcd_reset(void) {
     gpio_put(LCD_PIN_RST, 1); sleep_ms(50);
     gpio_put(LCD_PIN_RST, 0); sleep_ms(50);
     gpio_put(LCD_PIN_RST, 1); sleep_ms(150); 
 }
 
-//display
-static void gpio_initiate(void){
+// Display initialization
+static void gpio_initiate(void) {
     gpio_init(LCD_PIN_CS);
     gpio_set_dir(LCD_PIN_CS, GPIO_OUT);
     gpio_put(LCD_PIN_CS, 1);
@@ -48,16 +49,15 @@ static void gpio_initiate(void){
     gpio_put(LCD_PIN_BL, 1);
 }
 
-static void spi_initiate(void){
-    spi_init(LCD_SPI_PORT,62500 * 1000);
-    spi_set_format(LCD_SPI_PORT,  8,SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST );
+static void spi_initiate(void) {
+    spi_init(LCD_SPI_PORT, 62500 * 1000);
+    spi_set_format(LCD_SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     gpio_set_function(LCD_PIN_DIN, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PIN_CLK, GPIO_FUNC_SPI);
 }
-// PUBLIC API (NOT static)
-//XY
 
-void set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1){
+// PUBLIC API
+void set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     lcd_write_cmd(0x2A);
     uint8_t col_data[] = {
         (uint8_t)(x0 >> 8), (uint8_t)(x0 & 0xFF),
@@ -75,8 +75,13 @@ void set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1){
     lcd_write_cmd(0x2C);
 }
 
-
-//drawing Func
+// DRAWING FUNCTIONS
+void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
+    if (x >= LCD_WIDTH || y >= LCD_HEIGHT) return;
+    set_window(x, y, x, y);
+    uint8_t data[2] = { (uint8_t)(color >> 8), (uint8_t)(color & 0xFF) };
+    lcd_write_data(data, 2);
+}
 
 void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t scale) {
     int index;
@@ -89,10 +94,11 @@ void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t scale) {
         uint8_t line = font5x7[index][col];
         for (int row = 0; row < 7; row++) {
             if (line & (1 << row)) {
-               
-                for (int sx = 0; sx < scale; sx++)
-                    for (int sy = 0; sy < scale; sy++)
-                        draw_pixel(x + col*scale + sx, y + row*scale + sy, color);
+                for (int sx = 0; sx < scale; sx++) {
+                    for (int sy = 0; sy < scale; sy++) {
+                        draw_pixel(x + col * scale + sx, y + row * scale + sy, color);
+                    }
+                }
             }
         }
     }
@@ -106,17 +112,13 @@ void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t
         str++;
     }
 }
-void draw_pixel(uint16_t x, uint16_t y, uint16_t color){
-    if (x>=LCD_WIDTH || y >=LCD_HEIGHT)return;
-    set_window(x, y, x, y);
-    uint8_t data[2] = { (uint8_t)(color >> 8), (uint8_t)(color & 0xFF) };
-    lcd_write_data(data, 2);
-}
-void fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)  {
+
+void fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
     if (x >= LCD_WIDTH || y >= LCD_HEIGHT) return;
     if (x + w > LCD_WIDTH)  w = LCD_WIDTH - x;
     if (y + h > LCD_HEIGHT) h = LCD_HEIGHT - y;
     set_window(x, y, x + w - 1, y + h - 1);
+
     uint8_t hi = (uint8_t)(color >> 8);
     uint8_t lo = (uint8_t)(color & 0xFF);
 
@@ -131,37 +133,40 @@ void fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)  
         spi_write_blocking(LCD_SPI_PORT, line_buf, w * 2);
     }
     cs_Deselect();
- }
-void fill_screen(uint16_t color){
+}
+
+void fill_screen(uint16_t color) {
     fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
-// main init
+
 void init(void) {
     gpio_initiate();
     spi_initiate();
 
-    lcd_reset(); // MUST be first — wipes any registers set before it
+    lcd_reset(); // Resets display registers before configuration
 
     lcd_write_cmd(0x11); // Exit Sleep Mode
     sleep_ms(120);
 
-    lcd_write_cmd(0x3A); // Interface Pixel Format
+    lcd_write_cmd(0x3A); // Interface Pixel Format (RGB565)
     uint8_t format = 0x05;
     lcd_write_data(&format, 1);
 
-    lcd_write_cmd(0x21); // Display inversion ON
+    lcd_write_cmd(0x21); // Display Inversion ON
 
     lcd_write_cmd(0x36); // MADCTL — rotation/mirroring
     uint8_t madctl = 0x60;
     lcd_write_data(&madctl, 1);
 
-    uint8_t buttons[] = {BTN_A, BTN_B, BTN_X, BTN_Y};
+    // Initialize Push Buttons
+    uint buttons[] = {BTN_A, BTN_B, BTN_X, BTN_Y};
     for (int i = 0; i < 4; i++) {
         gpio_init(buttons[i]);
         gpio_set_dir(buttons[i], GPIO_IN);
         gpio_pull_up(buttons[i]);
     }
 
+    // Initialize Joystick Pins
     uint joy_pins[] = {JOY_UP, JOY_DOWN, JOY_LEFT, JOY_RIGHT, JOY_CTRL};
     for (int i = 0; i < 5; i++) {
         gpio_init(joy_pins[i]);
