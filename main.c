@@ -1,30 +1,21 @@
 
 #include "pico/stdlib.h"
 #include "init.h"
+#include "paint.h"
 #include <stdio.h>
-typedef enum { MENU, SNAKE, SPACESHIP, PAINT } app_state_t;
 
+//vars
+typedef enum { MENU, SNAKE, SPACESHIP, PAINT } app_state_t;
 #define NUM_ITEMS 3
 static int selected = 0;
 
 
-#define DEBOUNCE_MS 150
-
-static bool button_pressed(uint pin, bool *last_state, uint64_t *last_change_time) {
-    bool current = gpio_get(pin); // HIGH = not pressed, LOW = pressed
-    uint64_t now = to_ms_since_boot(get_absolute_time());
-
-    if (current != *last_state && (now - *last_change_time) > DEBOUNCE_MS) {
-        *last_change_time = now;
-        *last_state = current;
-        return (!current); 
-    }
-    return false;
-}
 
 void draw_menu(void) {
     fill_screen(COLOR_BLACK);
-    draw_text(60, 10, "MAIN MENU", COLOR_WHITE, 2);
+    
+  
+    draw_text(60, 10, "MAIN MENU", COLOR_WHITE, COLOR_BLACK, 2);
 
     const char* labels[] = {"SNAKE", "SHIP", "PAINT"};
 
@@ -32,10 +23,8 @@ void draw_menu(void) {
         int y = 60 + i * 55;
 
         if (i == selected) {
-         
             fill_rect(20, y, 200, 40, COLOR_YELLOW);
         } else {
-           
             fill_rect(20, y, 200, 40, COLOR_WHITE);
             fill_rect(22, y + 2, 196, 36, COLOR_BLACK);
         }
@@ -44,8 +33,11 @@ void draw_menu(void) {
         snprintf(display_label, sizeof(display_label), "%s %s",
                  (i == selected) ? ">" : " ", labels[i]);
 
+        
         uint16_t text_color = (i == selected) ? COLOR_BLACK : COLOR_WHITE;
-        draw_text(35, y + 12, display_label, text_color, 2);
+        uint16_t bg_color   = (i == selected) ? COLOR_YELLOW : COLOR_BLACK;
+
+        draw_text(35, y + 12, display_label, text_color, bg_color, 2);
     }
 }
 
@@ -88,8 +80,8 @@ int main() {
                 break;
 
             case PAINT:
+                paint();
                 state = MENU;
-                draw_menu();
                 break;
         }
     }

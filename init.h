@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 #include "hardware/spi.h"
-
+#include "hardware/adc.h"
 
 #define LCD_SPI_PORT   spi1
-
+#define DEBOUNCE_MS 150
 #define LCD_PIN_DIN    11   // MOSI
 #define LCD_PIN_CLK    10   // SCK
 #define LCD_PIN_CS      9
@@ -48,8 +48,11 @@ void draw_pixel(uint16_t x, uint16_t y, uint16_t color);
 void fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 void fill_screen(uint16_t color);
 void init(void);
-void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t scale);
-void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t scale);
-
+void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg_color, uint16_t scale);
+void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg_color, uint16_t scale);
+bool button_pressed(uint pin, bool *last_state, uint64_t *last_change_time);
+uint16_t joystick_read_x(void);
+uint16_t joystick_read_y(void);
+void joystick_adc_init(void);
 
 #endif 

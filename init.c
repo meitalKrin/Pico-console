@@ -4,6 +4,7 @@
 #include "hardware/gpio.h"
 #include "init.h"
 #include "font.h"
+#include "hardware/adc.h"
 
 // PRIVATE HELPERS (static)
 static inline void cs_select(void)   { gpio_put(LCD_PIN_CS, 0); } // Active Low
@@ -55,7 +56,23 @@ static void spi_initiate(void) {
     gpio_set_function(LCD_PIN_DIN, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PIN_CLK, GPIO_FUNC_SPI);
 }
+void joystick_adc_init(void) {
+    adc_init();
+    adc_gpio_init(26); // ADC0 (Joystick X)
+    adc_gpio_init(27); // ADC1 (Joystick Y)
+}
 
+// Reads X axis (ADC0 / GPIO 26)
+uint16_t joystick_read_x(void) {
+    adc_select_input(0);
+    return adc_read(); // Returns 0 to 4095
+}
+
+// Reads Y axis (ADC1 / GPIO 27)
+uint16_t joystick_read_y(void) {
+    adc_select_input(1);
+    return adc_read(); // Returns 0 to 4095
+}
 // PUBLIC API
 void set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     lcd_write_cmd(0x2A);
@@ -83,36 +100,35 @@ void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
     lcd_write_data(data, 2);
 }
 
-void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t scale) {
-    int index;
-    if (c == ' ') index = 0;
-    else if (c == '>') index = 27; 
-    else if (c >= 'A' && c <= 'Z') index = c - 'A' + 1;
-    else return;
+void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg_color, uint16_t scale) {
+    if (c < ' ' || c > '~') c = ' ';
 
-    for (int col = 0; col < 5; col++) {
-        uint8_t line = font5x7[index][col];
-        for (int row = 0; row < 7; row++) {
-            if (line & (1 << row)) {
-                for (int sx = 0; sx < scale; sx++) {
-                    for (int sy = 0; sy < scale; sy++) {
-                        draw_pixel(x + col * scale + sx, y + row * scale + sy, color);
-                    }
-                }
+    uint8_t index = c - ' ';
+
+  
+    for (uint8_t col = 0; col < 6; col++) {
+        uint8_t line = (col < 5) ? font5x7[index][col] : 0x00;
+
+        for (uint8_t row = 0; row < 7; row++) {
+            uint16_t pixel_color = (line & (1 << row)) ? color : bg_color;
+
+            if (scale == 1) {
+                draw_pixel(x + col, y + row, pixel_color);
+            } else {
+                fill_rect(x + col * scale, y + row * scale, scale, scale, pixel_color);
             }
         }
     }
 }
 
-void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t scale) {
+void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg_color, uint16_t scale) {
     uint16_t cursor_x = x;
     while (*str) {
-        draw_char(cursor_x, y, *str, color, scale);
+        draw_char(cursor_x, y, *str, color, bg_color, scale);
         cursor_x += 6 * scale; 
         str++;
     }
 }
-
 void fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
     if (x >= LCD_WIDTH || y >= LCD_HEIGHT) return;
     if (x + w > LCD_WIDTH)  w = LCD_WIDTH - x;
@@ -138,11 +154,11 @@ void fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
 void fill_screen(uint16_t color) {
     fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
-
+// final setup
 void init(void) {
     gpio_initiate();
     spi_initiate();
-
+    joystick_adc_init();
     lcd_reset(); // Resets display registers before configuration
 
     lcd_write_cmd(0x11); // Exit Sleep Mode
@@ -177,3 +193,19 @@ void init(void) {
     lcd_write_cmd(0x29); // Turn Display On
     sleep_ms(50);
 }
+
+//game and btn logic
+bool button_pressed(uint pin, bool *last_state, uint64_t *last_change_time) {
+    bool current = gpio_get(pin); // HIGH = not pressed, LOW = pressed
+    uint64_t now = to_ms_since_boot(get_absolute_time());
+
+    if (current != *last_state && (now - *last_change_time) > DEBOUNCE_MS) {
+        *last_change_time = now;
+        *last_state = current;
+        return (!current); 
+    }
+    return false;
+}
+
+
+

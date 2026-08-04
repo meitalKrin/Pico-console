@@ -48,6 +48,7 @@ target_link_libraries(pico_console
     pico_stdlib
     hardware_spi
     hardware_gpio
+    hardware_adc
 )
 
 if (PICO_CYW43_SUPPORTED)
