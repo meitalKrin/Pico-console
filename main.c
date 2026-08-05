@@ -2,6 +2,8 @@
 #include "pico/stdlib.h"
 #include "init.h"
 #include "paint.h"
+#include "snake.h"
+#include "spaceship.h"
 #include <stdio.h>
 
 //vars
@@ -70,17 +72,20 @@ int main() {
             }
 
             case SNAKE:
-                state = MENU;
+                snake ();
                 draw_menu();
+                state = MENU;
                 break;
 
             case SPACESHIP:
-                state = MENU;
+                spaceship();
                 draw_menu();
+                state = MENU;
                 break;
 
             case PAINT:
                 paint();
+                draw_menu();
                 state = MENU;
                 break;
         }

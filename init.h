@@ -37,6 +37,8 @@
 #define COLOR_WHITE   0xFFFF
 #define COLOR_RED     0xF800
 #define COLOR_GREEN   0x07E0
+#define COLOR_FIELD   0x45E8
+#define COLOR_SPACE   0x0845
 #define COLOR_BLUE    0x001F
 #define COLOR_YELLOW  0xFFE0
 #define COLOR_CYAN    0x07FF

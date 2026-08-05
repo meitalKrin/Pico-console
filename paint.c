@@ -3,6 +3,8 @@
 #include "paint.h"
 #include <stdio.h>
 
+
+
 // Color palette definition
 uint16_t paint_colors[] = {
     0xF800, // Red
@@ -56,8 +58,12 @@ void paint(void) {
     const uint16_t CENTER_X = 800;
     const uint16_t CENTER_Y = 690;
     const uint16_t DEADZONE = 200;
-    
+    btn_y_last = true;
     while (true) {
+          // Exit to main menu on BTN_Y press
+        if (button_pressed(BTN_Y, &btn_y_last, &btn_y_time)) {
+            return;
+        }
         //  Cycle Colors
         if (button_pressed(BTN_B, &btn_b_last, &btn_b_time)) {
             color_index = (color_index + 1) % num_colors; 
@@ -71,28 +77,13 @@ void paint(void) {
         prev_x = cursor_x;
         prev_y = cursor_y;
 
-        // X-Axis Movement
-        if (raw_x > CENTER_X + DEADZONE && cursor_x < LCD_WIDTH - 6) {
-            cursor_x += 2; // Move Right
-        } else if (raw_x < CENTER_X - DEADZONE && cursor_x > 2) {
-            cursor_x -= 2; // Move Left
-        }
-
-        // Y-Axis Movement
-        if (raw_y > CENTER_Y + DEADZONE && cursor_y < LCD_HEIGHT - 6) {
-            cursor_y += 2; // Move Down
-        } else if (raw_y < CENTER_Y - DEADZONE && cursor_y > (LCD_HEIGHT / 10) + 2) {
-            cursor_y -= 2; // Move Up
-        }
+        
 
         //courser logic
         courser(cursor_x, cursor_y, paint_colors[color_index]);
 
 
-        //  Exit App 
-        if (button_pressed(BTN_Y, &btn_y_last, &btn_y_time)) {
-           //
-        }
+      
 
         sleep_ms(10);
     }
