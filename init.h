@@ -53,8 +53,7 @@ void init(void);
 void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg_color, uint16_t scale);
 void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg_color, uint16_t scale);
 bool button_pressed(uint pin, bool *last_state, uint64_t *last_change_time);
-uint16_t joystick_read_x(void);
-uint16_t joystick_read_y(void);
-void joystick_adc_init(void);
+void cs_select(void);
+void cs_Deselect(void);
 
 #endif 

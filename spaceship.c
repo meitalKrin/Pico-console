@@ -6,7 +6,7 @@
 
 //vars
 static uint32_t score = 0;
-char score_buffer[32];
+char score_buffer_spaceship[32];
 // Button debounce tracking
 static bool btn_y_last = true;
 static uint64_t btn_y_time = 0;
@@ -29,8 +29,8 @@ void spaceship (void) {
             score = 0;
             return;
         }
-        snprintf(score_buffer, sizeof(score_buffer), "SCORE: %lu", (unsigned long)score);
-        draw_text(10, 5, score_buffer, COLOR_WHITE, COLOR_BLACK, 1);
+        snprintf(score_buffer_spaceship, sizeof(score_buffer_spaceship), "SCORE: %lu", (unsigned long)score);
+        draw_text(10, 5, score_buffer_spaceship, COLOR_WHITE, COLOR_BLACK, 1);
         score++;
        
     }

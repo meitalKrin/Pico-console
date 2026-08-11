@@ -1,32 +1,193 @@
-
 #include "pico/stdlib.h"
 #include "init.h"
 #include "snake.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-//vars
-static int score = 0;
+#define MAX_TAIL 200
+
+// File-scoped static variables (prevents multiple definition linker errors)
+static uint16_t apple_size = 10;
+static uint16_t apple_x = 0;
+static uint16_t apple_y = 0;
+static uint32_t score = 0;
+
+// Direction tracking
+static int8_t dir_x = 1;
+static int8_t dir_y = 0;
+
+// History buffer to track tail positions
+static uint16_t history_x[MAX_TAIL];
+static uint16_t history_y[MAX_TAIL];
+
+// Local score string buffer
+static char score_buffer[32];
+
 // Button debounce tracking
 static bool btn_y_last = true;
 static uint64_t btn_y_time = 0;
 
-void snake_ui(void) {
-    fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT / 10, COLOR_BLACK);
-    draw_text(5, 5, "SCORE", COLOR_WHITE, COLOR_BLACK, 1);
-    draw_text( LCD_WIDTH -50 ,  5, "[Y] Exit", COLOR_WHITE, COLOR_BLACK, 1);
-   
+static void courser_snake(uint16_t x, uint16_t y, uint16_t color) {
+    const uint16_t CURSOR_SIZE = 5;
+    fill_rect(x, y, CURSOR_SIZE, CURSOR_SIZE, color);
 }
 
-void snake (void) {
-    // Clear canvas and render UI
-    fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, COLOR_FIELD);
-    snake_ui();
-    btn_y_last = true;
+void snake_ui(void) {
+    fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT / 10, COLOR_BLACK);
     
+    snprintf(score_buffer, sizeof(score_buffer), "SCORE: %lu", (unsigned long)score);
+    draw_text(5, 5, score_buffer, COLOR_WHITE, COLOR_BLACK, 1);
+    
+    draw_text(LCD_WIDTH - 65, 5, "[Y] Exit", COLOR_WHITE, COLOR_BLACK, 1);
+}
+
+void GameOver(void) {
+    fill_screen(COLOR_WHITE);
+    draw_text(50, 80, "GAME OVER", COLOR_RED, COLOR_WHITE, 2);
+
+    snprintf(score_buffer, sizeof(score_buffer), "SCORE: %lu", (unsigned long)score);
+    draw_text(60, 120, score_buffer, COLOR_BLACK, COLOR_WHITE, 2);
+    draw_text(40, 170, "Press [Y] to Exit", COLOR_BLACK, COLOR_WHITE, 1);
+
+    bool btn_y_state = true;
+    uint64_t btn_y_timer = 0;
+    
+    while (true) {
+        if (button_pressed(BTN_Y, &btn_y_state, &btn_y_timer)) {
+            break;
+        }
+        sleep_ms(20);
+    }
+}
+
+void SpawnApple(void) {
+    uint16_t top_margin = LCD_HEIGHT / 10; 
+    uint16_t playable_height = LCD_HEIGHT - top_margin;
+
+    uint16_t max_grid_x = LCD_WIDTH / apple_size;
+    uint16_t max_grid_y = playable_height / apple_size;
+
+    // Generate random grid coordinates aligned to apple_size
+    apple_x = (rand() % max_grid_x) * apple_size;
+    apple_y = top_margin + (rand() % max_grid_y) * apple_size;
+
+    // Draw square apple
+    fill_rect(apple_x, apple_y, apple_size, apple_size, COLOR_RED);
+}
+
+void snake(void) {
+    srand(to_us_since_boot(get_absolute_time()));
+
+    // Clear canvas and render initial UI
+    fill_screen(COLOR_FIELD);
+    
+    score = 0;
+    btn_y_last = true;
+
+    // Reset starting direction (moving RIGHT)
+    dir_x = 1;
+    dir_y = 0;
+    
+    snake_ui();
+    SpawnApple();
+
+    uint16_t cursor_x = 120;
+    uint16_t cursor_y = 120;
+    const uint16_t CURSOR_SIZE = 5;
+    const uint16_t TOP_MARGIN = LCD_HEIGHT / 10;
+
+    // Initialize history buffer with initial head position
+    for (int i = 0; i < MAX_TAIL; i++) {
+        history_x[i] = cursor_x;
+        history_y[i] = cursor_y;
+    }
+
+    // Draw initial cursor position
+    courser_snake(cursor_x, cursor_y, COLOR_GREEN);
+
     while (true) {
         // Exit to main menu on BTN_Y press
         if (button_pressed(BTN_Y, &btn_y_last, &btn_y_time)) {
             return;
         }
+
+        // READ JOYSTICK INPUT (Block 180-degree reversals)
+        if (!gpio_get(JOY_RIGHT) && dir_x != -1) {
+            dir_x = 1;
+            dir_y = 0;
+        } else if (!gpio_get(JOY_LEFT) && dir_x != 1) {
+            dir_x = -1;
+            dir_y = 0;
+        } else if (!gpio_get(JOY_DOWN) && dir_y != -1) {
+            dir_x = 0;
+            dir_y = 1;
+        } else if (!gpio_get(JOY_UP) && dir_y != 1) {
+            dir_x = 0;
+            dir_y = -1;
+        }
+
+        // ALWAYS MOVE 
+        const int8_t CURSOR_SPEED = 2; // Movement step per frame
+
+        int16_t new_x = (int16_t)cursor_x + dir_x * CURSOR_SPEED;
+        int16_t new_y = (int16_t)cursor_y + dir_y * CURSOR_SPEED;
+
+        // Wall Bounds Checking
+        if (new_x < 0 || new_x > LCD_WIDTH - CURSOR_SIZE ||
+            new_y < TOP_MARGIN || new_y > LCD_HEIGHT - CURSOR_SIZE) 
+        {
+            GameOver();
+            return; // Exit game loop after Game Over
+        }
+
+        cursor_x = (uint16_t)new_x;
+        cursor_y = (uint16_t)new_y;
+
+        // Determine snake tail length based on score
+        int tail_length = 5 + (score * 5);
+        if (tail_length >= MAX_TAIL) tail_length = MAX_TAIL - 1;
+
+
+        for (int i = 10; i < tail_length; i++) {
+            if (cursor_x < history_x[i] + CURSOR_SIZE &&
+                cursor_x + CURSOR_SIZE > history_x[i] &&
+                cursor_y < history_y[i] + CURSOR_SIZE &&
+                cursor_y + CURSOR_SIZE > history_y[i]) 
+            {
+                GameOver();
+                return; // Exit game loop
+            }
+        }
+
+        // Erase the old tail segment from the screen
+        courser_snake(history_x[tail_length], history_y[tail_length], COLOR_FIELD);
+
+        // Shift position history right
+        for (int i = tail_length; i > 0; i--) {
+            history_x[i] = history_x[i - 1];
+            history_y[i] = history_y[i - 1];
+        }
+
+        // Insert new head position into history
+        history_x[0] = cursor_x;
+        history_y[0] = cursor_y;
+
+        // Apple collision check 
+        if (cursor_x < apple_x + apple_size &&
+            cursor_x + CURSOR_SIZE > apple_x &&
+            cursor_y < apple_y + apple_size &&
+            cursor_y + CURSOR_SIZE > apple_y) 
+        {
+            // Erase eaten apple
+            fill_rect(apple_x, apple_y, apple_size, apple_size, COLOR_FIELD);
+            
+            score++;
+            snake_ui();
+            SpawnApple();
+        }
+
+        // Draw active head position
+        courser_snake(cursor_x, cursor_y, COLOR_GREEN);
+        sleep_ms(25);
     }
 }

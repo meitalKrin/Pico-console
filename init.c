@@ -7,8 +7,8 @@
 #include "hardware/adc.h"
 
 // PRIVATE HELPERS (static)
-static inline void cs_select(void)   { gpio_put(LCD_PIN_CS, 0); } // Active Low
-static inline void cs_Deselect(void) { gpio_put(LCD_PIN_CS, 1); } // Inactive High
+void cs_select(void)   { gpio_put(LCD_PIN_CS, 0); } // Active Low
+ void cs_Deselect(void) { gpio_put(LCD_PIN_CS, 1); } // Inactive High
 
 static inline void lcd_write_cmd(uint8_t cmd) {
     gpio_put(LCD_PIN_DC, 0);
@@ -56,23 +56,8 @@ static void spi_initiate(void) {
     gpio_set_function(LCD_PIN_DIN, GPIO_FUNC_SPI);
     gpio_set_function(LCD_PIN_CLK, GPIO_FUNC_SPI);
 }
-void joystick_adc_init(void) {
-    adc_init();
-    adc_gpio_init(26); // ADC0 (Joystick X)
-    adc_gpio_init(27); // ADC1 (Joystick Y)
-}
 
-// Reads X axis (ADC0 / GPIO 26)
-uint16_t joystick_read_x(void) {
-    adc_select_input(0);
-    return adc_read(); // Returns 0 to 4095
-}
 
-// Reads Y axis (ADC1 / GPIO 27)
-uint16_t joystick_read_y(void) {
-    adc_select_input(1);
-    return adc_read(); // Returns 0 to 4095
-}
 // PUBLIC API
 void set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     lcd_write_cmd(0x2A);
@@ -158,7 +143,7 @@ void fill_screen(uint16_t color) {
 void init(void) {
     gpio_initiate();
     spi_initiate();
-    joystick_adc_init();
+
     lcd_reset(); // Resets display registers before configuration
 
     lcd_write_cmd(0x11); // Exit Sleep Mode
@@ -170,7 +155,7 @@ void init(void) {
 
     lcd_write_cmd(0x21); // Display Inversion ON
 
-    lcd_write_cmd(0x36); // MADCTL — rotation/mirroring
+    lcd_write_cmd(0x36); // MADCTL rotation
     uint8_t madctl = 0x60;
     lcd_write_data(&madctl, 1);
 
