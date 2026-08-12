@@ -19,7 +19,7 @@ void draw_menu(void) {
   
     draw_text(60, 10, "MAIN MENU", COLOR_WHITE, COLOR_BLACK, 2);
 
-    const char* labels[] = {"SNAKE", "SHIP", "PAINT"};
+    const char* labels[] = {"SNAKE", "SPACESHIP", "PAINT"};
 
     for (int i = 0; i < NUM_ITEMS; i++) {
         int y = 60 + i * 55;

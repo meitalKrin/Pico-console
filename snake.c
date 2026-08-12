@@ -28,7 +28,7 @@ static bool btn_y_last = true;
 static uint64_t btn_y_time = 0;
 
 static void courser_snake(uint16_t x, uint16_t y, uint16_t color) {
-    const uint16_t CURSOR_SIZE = 5;
+    const uint16_t CURSOR_SIZE = 10;
     fill_rect(x, y, CURSOR_SIZE, CURSOR_SIZE, color);
 }
 
@@ -61,15 +61,28 @@ void GameOver(void) {
 }
 
 void SpawnApple(void) {
-    uint16_t top_margin = LCD_HEIGHT / 10; 
+    // Number of cells to pad away from the outer edges
+    const uint16_t BORDER_PADDING = 5; 
+    uint16_t top_margin = 20; 
+    uint16_t playable_width = LCD_WIDTH;
     uint16_t playable_height = LCD_HEIGHT - top_margin;
 
-    uint16_t max_grid_x = LCD_WIDTH / apple_size;
+    // Calculate maximum available grid cells in total
+    uint16_t max_grid_x = playable_width / apple_size;
     uint16_t max_grid_y = playable_height / apple_size;
 
-    // Generate random grid coordinates aligned to apple_size
-    apple_x = (rand() % max_grid_x) * apple_size;
-    apple_y = top_margin + (rand() % max_grid_y) * apple_size;
+    // Ensure screen dimensions are large enough for the padding
+    if (max_grid_x <= (BORDER_PADDING * 2) || max_grid_y <= (BORDER_PADDING * 2)) {
+        return;
+    }
+
+    // Restrict random grid generation to the padded inner region
+    uint16_t inner_grid_x = max_grid_x - (BORDER_PADDING * 2);
+    uint16_t inner_grid_y = max_grid_y - (BORDER_PADDING * 2);
+
+    // Calculate aligned screen position offset by the border padding
+    apple_x = (BORDER_PADDING + (rand() % inner_grid_x)) * apple_size;
+    apple_y = top_margin + (BORDER_PADDING + (rand() % inner_grid_y)) * apple_size;
 
     // Draw square apple
     fill_rect(apple_x, apple_y, apple_size, apple_size, COLOR_RED);
@@ -127,7 +140,7 @@ void snake(void) {
         }
 
         // ALWAYS MOVE 
-        const int8_t CURSOR_SPEED = 2; // Movement step per frame
+        const int8_t CURSOR_SPEED = 3; // Movement step per frame
 
         int16_t new_x = (int16_t)cursor_x + dir_x * CURSOR_SPEED;
         int16_t new_y = (int16_t)cursor_y + dir_y * CURSOR_SPEED;
