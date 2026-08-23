@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #define MAX_TAIL 200
-
+#define CURSOR_SIZE 10 
 // File-scoped static variables (prevents multiple definition linker errors)
 static uint16_t apple_size = 10;
 static uint16_t apple_x = 0;
@@ -28,7 +28,6 @@ static bool btn_y_last = true;
 static uint64_t btn_y_time = 0;
 
 static void courser_snake(uint16_t x, uint16_t y, uint16_t color) {
-    const uint16_t CURSOR_SIZE = 10;
     fill_rect(x, y, CURSOR_SIZE, CURSOR_SIZE, color);
 }
 
@@ -106,7 +105,6 @@ void snake(void) {
 
     uint16_t cursor_x = 120;
     uint16_t cursor_y = 120;
-    const uint16_t CURSOR_SIZE = 5;
     const uint16_t TOP_MARGIN = LCD_HEIGHT / 10;
 
     // Initialize history buffer with initial head position
@@ -140,7 +138,7 @@ void snake(void) {
         }
 
         // ALWAYS MOVE 
-        const int8_t CURSOR_SPEED = 3; // Movement step per frame
+        const int8_t CURSOR_SPEED = 5; // Movement step per frame
 
         int16_t new_x = (int16_t)cursor_x + dir_x * CURSOR_SPEED;
         int16_t new_y = (int16_t)cursor_y + dir_y * CURSOR_SPEED;
@@ -176,15 +174,15 @@ void snake(void) {
         courser_snake(history_x[tail_length], history_y[tail_length], COLOR_FIELD);
 
         // Shift position history right
-        for (int i = tail_length; i > 0; i--) {
-            history_x[i] = history_x[i - 1];
-            history_y[i] = history_y[i - 1];
+        for (int i = MAX_TAIL - 1; i > 0; i--) {
+         history_x[i] = history_x[i - 1];
+         history_y[i] = history_y[i - 1];
         }
+
 
         // Insert new head position into history
         history_x[0] = cursor_x;
         history_y[0] = cursor_y;
-
         // Apple collision check 
         if (cursor_x < apple_x + apple_size &&
             cursor_x + CURSOR_SIZE > apple_x &&
@@ -193,7 +191,6 @@ void snake(void) {
         {
             // Erase eaten apple
             fill_rect(apple_x, apple_y, apple_size, apple_size, COLOR_FIELD);
-            
             score++;
             snake_ui();
             SpawnApple();

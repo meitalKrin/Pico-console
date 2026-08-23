@@ -195,7 +195,7 @@ void spaceship(void) {
         }
 
         // Draw active player ship
-        courser_spaceship(cursor_x, cursor_y, COLOR_BLACK);
+        courser_spaceship(cursor_x, cursor_y, COLOR_RED);
 
         sleep_ms(20); 
     }
