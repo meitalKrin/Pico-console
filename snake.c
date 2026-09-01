@@ -4,21 +4,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_TAIL 200
+#define TAIL_CAPACITY 200
 #define CURSOR_SIZE 10 
 // File-scoped static variables (prevents multiple definition linker errors)
 static uint16_t apple_size = 10;
 static uint16_t apple_x = 0;
 static uint16_t apple_y = 0;
 static uint32_t score = 0;
+static int head = 0;
 
 // Direction tracking
 static int8_t dir_x = 1;
 static int8_t dir_y = 0;
 
 // History buffer to track tail positions
-static uint16_t history_x[MAX_TAIL];
-static uint16_t history_y[MAX_TAIL];
+static uint16_t history_x[TAIL_CAPACITY];
+static uint16_t history_y[TAIL_CAPACITY];
 
 // Local score string buffer
 static char score_buffer[32];
@@ -108,10 +109,10 @@ void snake(void) {
     const uint16_t TOP_MARGIN = LCD_HEIGHT / 10;
 
     // Initialize history buffer with initial head position
-    for (int i = 0; i < MAX_TAIL; i++) {
-        history_x[i] = cursor_x;
-        history_y[i] = cursor_y;
-    }
+   for (int i = 0; i < TAIL_CAPACITY; i++) {
+    history_x[i] = cursor_x;
+    history_y[i] = cursor_y;
+}
 
     // Draw initial cursor position
     courser_snake(cursor_x, cursor_y, COLOR_GREEN);
@@ -156,33 +157,32 @@ void snake(void) {
 
         // Determine snake tail length based on score
         int tail_length = 5 + (score * 5);
-        if (tail_length >= MAX_TAIL) tail_length = MAX_TAIL - 1;
+        if (tail_length >= TAIL_CAPACITY) tail_length = TAIL_CAPACITY - 1;
 
 
-        for (int i = 10; i < tail_length; i++) {
-            if (cursor_x < history_x[i] + CURSOR_SIZE &&
-                cursor_x + CURSOR_SIZE > history_x[i] &&
-                cursor_y < history_y[i] + CURSOR_SIZE &&
-                cursor_y + CURSOR_SIZE > history_y[i]) 
-            {
-                GameOver();
-                return; // Exit game loop
+       for (int i = 10; i < tail_length; i++) {
+            if (cursor_x < history_x[(head + TAIL_CAPACITY - i) % TAIL_CAPACITY] + CURSOR_SIZE &&
+             cursor_x + CURSOR_SIZE > history_x[(head + TAIL_CAPACITY - i) % TAIL_CAPACITY] &&
+             cursor_y < history_y[(head + TAIL_CAPACITY - i) % TAIL_CAPACITY] + CURSOR_SIZE &&
+             cursor_y + CURSOR_SIZE > history_y[(head + TAIL_CAPACITY - i) % TAIL_CAPACITY]) 
+             {
+        GameOver();
+        return;
             }
         }
-
         // Erase the old tail segment from the screen
-        courser_snake(history_x[tail_length], history_y[tail_length], COLOR_FIELD);
+        courser_snake(history_x[(head + TAIL_CAPACITY - tail_length) % TAIL_CAPACITY],
+              history_y[(head + TAIL_CAPACITY - tail_length) % TAIL_CAPACITY],
+              COLOR_FIELD);
 
         // Shift position history right
-        for (int i = MAX_TAIL - 1; i > 0; i--) {
-         history_x[i] = history_x[i - 1];
-         history_y[i] = history_y[i - 1];
-        }
+         head = (head + 1) % TAIL_CAPACITY;
+            history_x[head] = cursor_x;
+            history_y[head] = cursor_y;
 
 
         // Insert new head position into history
-        history_x[0] = cursor_x;
-        history_y[0] = cursor_y;
+   
         // Apple collision check 
         if (cursor_x < apple_x + apple_size &&
             cursor_x + CURSOR_SIZE > apple_x &&
