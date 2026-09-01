@@ -86,24 +86,42 @@ void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
 }
 
 void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg_color, uint16_t scale) {
+     uint8_t temp_arr[6 * 4* 2];
     if (c < ' ' || c > '~') c = ' ';
 
     uint8_t index = c - ' ';
 
+   uint16_t x0 =x;
+   uint16_t y0 = y;
+   uint16_t x1 = x + (scale*6) - 1;
+   uint16_t y1 = y + (scale*7) - 1;
+   set_window(x0, y0,x1, y1);
+   gpio_put(LCD_PIN_DC, 1);
+   cs_select();
   
-    for (uint8_t col = 0; col < 6; col++) {
+
+ for (uint8_t font_row = 0; font_row < 7; font_row++) {
+    for (uint8_t row_repeat = 0; row_repeat < scale; row_repeat++) {
+
+     uint8_t buf_index = 0;
+
+        for (uint8_t col = 0; col < 6; col++) {
+           
         uint8_t line = (col < 5) ? font5x7[index][col] : 0x00;
+        uint16_t pixel_color = (line & (1 << font_row)) ? color : bg_color;
 
-        for (uint8_t row = 0; row < 7; row++) {
-            uint16_t pixel_color = (line & (1 << row)) ? color : bg_color;
-
-            if (scale == 1) {
-                draw_pixel(x + col, y + row, pixel_color);
-            } else {
-                fill_rect(x + col * scale, y + row * scale, scale, scale, pixel_color);
+           for (uint8_t col_repeat = 0; col_repeat < scale; col_repeat++) {
+                temp_arr[buf_index]     = (uint8_t)(pixel_color >> 8);   
+                temp_arr[buf_index + 1] = (uint8_t)(pixel_color & 0xFF); 
+                buf_index += 2;                                          
             }
         }
+
+        
+         spi_write_blocking(LCD_SPI_PORT, temp_arr, 6*scale*2);
     }
+}
+cs_Deselect();
 }
 
 void draw_text(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg_color, uint16_t scale) {
