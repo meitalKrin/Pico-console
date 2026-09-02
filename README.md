@@ -104,7 +104,7 @@ Each `set_window` call costs a full column-address + row-address + RAM-write com
 | Full `"MAIN MENU"` redraw, scale 2 | Time |
 |---|---|
 | Before | **1066 µs** |
-| After | **3600 µs** |
+| Before | **1066 µs** |
 
 </div>
 
