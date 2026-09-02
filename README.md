@@ -1,69 +1,292 @@
-Pico Console
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pico Console - Bare-Metal Handheld Game Console</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.15);
+            --code-bg: #1f6feb33;
+        }
 
-A bare-metal handheld game console , Snake, Spaceship, and Paint — running on a Raspberry Pi Pico 2 , behind a menu shell you navigate with a joystick and four buttons. The display driver, input handling, and all three games are hand-written against the datasheet and the Pico SDK — no vendor display library, no game engine.
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+        }
 
-<img width="1491" height="780" alt="WhatsApp Image 2026-09-02 at 16 48 13" src="https://github.com/user-attachments/assets/475b43eb-73dd-4f93-8f8d-a98633743ad3" />
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
 
-https://github.com/user-attachments/assets/f15f0d57-6506-4bb8-8c79-b11a607ec438
+        header {
+            text-align: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
 
-What it is
+        h1 {
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
 
-Power on, the menu shows three games, the joystick moves the selection, a button confirms. Each game owns the screen until you exit back to the menu. Under the hood: a single hand-written SPI display driver and input layer shared by the menu and all three games, so adding a fourth game means writing game logic, not another copy of the display driver.
+        h1 span {
+            color: var(--accent);
+        }
 
-Game	What it is
-Snake	Grid movement, food, self-collision, growing tail. Tail history is a ring buffer (see Performance below).
-Spaceship	Vertical dodge — joystick moves the ship, obstacles fall, survive as long as you can.
-Paint	Freehand drawing — joystick moves a cursor, hold to draw, cycle a color palette.
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
 
+        .media-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
 
-Hardware
-	
-MCU	RP2350 (Pico 2 / Pico 2 W), dual Cortex-M33
-Board	pico2_w (set in CMakeLists.txt via PICO_BOARD)
-Display	ST7789, RGB565, 240×240, driven over SPI1
-Input	2-axis joystick (4 direction GPIOs + center press) + 4 push-buttons
-SPI	spi1, requested clock 62.5 MHz, mode 0 (CPOL=0, CPHA=0), MSB-first
+        @media (min-width: 768px) {
+            .media-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
 
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
 
-pinout
-Signal	GPIO
-LCD MOSI (DIN)	11
-LCD SCK (CLK)	10
-LCD CS	9
-LCD DC	8
-LCD RST	12
-LCD Backlight	13
-Button A	15
-Button B	17
-Button X	19
-Button Y	21
-Joystick Up	2
-Joystick Down	18
-Joystick Left	16
-Joystick Right	20
-Joystick Center	3
+        section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+        }
 
-<img width="1719" height="1866" alt="da25fffb-243b-4eff-ae08-7ec21e631b13" src="https://github.com/user-attachments/assets/fb7354e2-8dc3-4bb2-af67-f721f983e081" />
-Building
+        h2 {
+            font-size: 1.4rem;
+            color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
 
-Requires the Raspberry Pi Pico VS Code extension (pulls in Pico SDK 2.3.0 and the ARM toolchain automatically), or a manual toolchain setup:
+        p {
+            margin: 0.8rem 0;
+        }
 
-bash
-git clone https://github.com/meitalKrin/Pico-console
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+            background-color: rgba(110, 118, 129, 0.4);
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            font-size: 85%;
+        }
+
+        pre {
+            background-color: #010409;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            font-size: 85%;
+            font-weight: 600;
+            line-height: 1;
+            color: #1f6feb;
+            background-color: var(--code-bg);
+            border-radius: 20px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <header>
+        <span class="badge">Raspberry Pi Pico 2 / RP2350</span>
+        <h1>🎮 Pico <span>Console</span></h1>
+        <p class="tagline">A bare-metal handheld game console running Snake, Spaceship, and Paint.</p>
+    </header>
+
+    <div class="media-grid">
+        <div>
+            <img width="1491" height="780" alt="Pico Console Hardware View" src="https://github.com/user-attachments/assets/475b43eb-73dd-4f93-8f8d-a98633743ad3" />
+        </div>
+        <div>
+            <img width="1719" height="1866" alt="Schematics/Wiring" src="https://github.com/user-attachments/assets/fb7354e2-8dc3-4bb2-af67-f721f983e081" />
+        </div>
+    </div>
+
+    <section>
+        <h2>⚡ What It Is</h2>
+        <p>Power on, the menu shows three games, the joystick moves the selection, a button confirms. Each game owns the screen until you exit back to the menu.</p>
+        <p><strong>Under the hood:</strong> A single hand-written SPI display driver and input layer shared by the menu and all three games, so adding a fourth game means writing game logic, not another copy of the display driver.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Game</th>
+                    <th>What it is</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Snake</strong></td>
+                    <td>Grid movement, food, self-collision, growing tail. Tail history utilizes an optimized ring buffer.</td>
+                </tr>
+                <tr>
+                    <td><strong>Spaceship</strong></td>
+                    <td>Vertical dodge — joystick moves the ship, obstacles fall, survive as long as you can.</td>
+                </tr>
+                <tr>
+                    <td><strong>Paint</strong></td>
+                    <td>Freehand drawing — joystick moves a cursor, hold to draw, cycle a color palette.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>🛠️ Hardware Specs</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Specification</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>MCU</strong></td>
+                    <td>RP2350 (Pico 2 / Pico 2 W), dual Cortex-M33</td>
+                </tr>
+                <tr>
+                    <td><strong>Board</strong></td>
+                    <td><code>pico2_w</code> (set in CMakeLists.txt via PICO_BOARD)</td>
+                </tr>
+                <tr>
+                    <td><strong>Display</strong></td>
+                    <td>ST7789, RGB565, 240×240, driven over SPI1</td>
+                </tr>
+                <tr>
+                    <td><strong>Input</strong></td>
+                    <td>2-axis joystick (4 direction GPIOs + center press) + 4 push-buttons</td>
+                </tr>
+                <tr>
+                    <td><strong>SPI</strong></td>
+                    <td>spi1, requested clock 62.5 MHz, mode 0 (CPOL=0, CPHA=0), MSB-first</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>🔌 Pinout Configuration</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signal</th>
+                    <th>GPIO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>LCD MOSI (DIN)</td><td>11</td></tr>
+                <tr><td>LCD SCK (CLK)</td><td>10</td></tr>
+                <tr><td>LCD CS</td><td>9</td></tr>
+                <tr><td>LCD DC</td><td>8</td></tr>
+                <tr><td>LCD RST</td><td>12</td></tr>
+                <tr><td>LCD Backlight</td><td>13</td></tr>
+                <tr><td>Button A</td><td>15</td></tr>
+                <tr><td>Button B</td><td>17</td></tr>
+                <tr><td>Button X</td><td>19</td></tr>
+                <tr><td>Button Y</td><td>21</td></tr>
+                <tr><td>Joystick Up</td><td>2</td></tr>
+                <tr><td>Joystick Down</td><td>18</td></tr>
+                <tr><td>Joystick Left</td><td>16</td></tr>
+                <tr><td>Joystick Right</td><td>20</td></tr>
+                <tr><td>Joystick Center</td><td>3</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>🚀 Building & Flashing</h2>
+        <p>Requires the Raspberry Pi Pico VS Code extension (pulls in Pico SDK 2.3.0 and the ARM toolchain automatically), or a manual toolchain setup:</p>
+        <pre><code>git clone https://github.com/meitalKrin/Pico-console
 cd Pico-console
 cmake -B build -S . -G Ninja
-cmake --build build
+cmake --build build</code></pre>
+        <p>Flash the resulting <code>build/pico_console.uf2</code> to the Pico 2 in <strong>BOOTSEL mode</strong>. Debug output (<code>printf</code>) is available over USB serial.</p>
+    </section>
 
-Flash the resulting build/pico_console.uf2 to the Pico 2 in BOOTSEL mode. Debug output (printf) is available over USB serial.
+    <section>
+        <h2>⚡ Performance Notes</h2>
+        <p>Two specific inefficiencies were found and fixed, each measured and documented in individual commits (#1, #2):</p>
+        
+        <ul>
+            <li>
+                <strong>Display Driver Optimization:</strong> <code>draw_char</code> was resetting the display's addressing window on every single pixel. Each <code>set_window</code> call costs a full column-address + row-address + RAM-write command sequence (~11 bytes across several SPI transactions) before a single pixel of color is sent. 
+                <br><em>Fix:</em> Computed the character's bounding box once, set the window a single time, and streamed every pixel of the glyph in one held chip-select session (matching <code>fill_rect</code>'s behavior).
+                <div style="margin: 1rem 0; display: flex; gap: 1rem; align-items: center; justify-content: center;">
+                    <div>Before: <br><img width="244" height="148" alt="Before optimization" src="https://github.com/user-attachments/assets/fd80d7a3-fd1d-4f54-93a6-af2ce05ca226" /></div>
+                    <div>After: <br><img width="299" height="121" alt="After optimization" src="https://github.com/user-attachments/assets/198954ea-84e8-4ba5-8c25-5c5d8b1e919c" /></div>
+                </div>
+            </li>
+            <li>
+                <strong>Snake Tail Ring Buffer:</strong> Snake's tail history shifted a 200-element array by one every single frame regardless of the snake's actual length—O(200) writes per frame even for a 5-segment snake. 
+                <br><em>Fix:</em> Replaced with a ring buffer. A head index advances by one (wrapping modulo buffer size) each frame, and position reads translate relative to head—achieving <strong>O(1)</strong> complexity per frame.
+            </li>
+        </ul>
+    </section>
 
-Performance notes
+</div>
 
-Two specific inefficiencies were found and fixed, each measured, each its own commit (#1, #2):
-
-draw_char was resetting the display's addressing window on every single pixel. Each set_window call costs a full column-address + row-address + RAM-write command sequence (~11 bytes across several SPI transactions) before a single pixel of color is sent. Drawing one character could cost dozens of window resets for a handful of pixels. Fixed by computing the character's bounding box once, setting the window a single time, and streaming every pixel of the glyph in one held chip-select session — the same pattern the existing fill_rect already used correctly.
-
-Measured a full "MAIN MENU" redraw at scale 2: <img width="244" height="148" alt="image" src="https://github.com/user-attachments/assets/fd80d7a3-fd1d-4f54-93a6-af2ce05ca226" />
- before <img width="299" height="121" alt="image" src="https://github.com/user-attachments/assets/198954ea-84e8-4ba5-8c25-5c5d8b1e919c" />
-
-
-Snake's tail history shifted a 200-element array by one every single frame, regardless of how long the snake actually was — O(200) writes per frame even for a 5-segment snake. Replaced with a ring buffer: a head index advances by one (wrapping modulo the buffer size) each frame, and every position read is translated relative to head — O(1) per frame instead of O(200).
+</body>
+</html>
